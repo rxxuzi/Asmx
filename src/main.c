@@ -12,11 +12,16 @@ int main(const int argc, const char *argv[]) {
     const char *file = argv[1];
 
     ASMX *asmx = newAsmx(file);
+    if (asmx == NULL) {
+        fprintf(stderr, "Error: failed to open file '%s'\n", file);
+        exit(1);
+    }
     ASMC *asmc = newAsmc(asmx);
 
     build(asmc);
 
     freeAsmx(asmx);
     freeAsmc(asmc);
+    printf("Done.\n");
     return 0;
 }

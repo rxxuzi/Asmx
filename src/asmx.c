@@ -29,6 +29,7 @@ ASMX *newAsmx(const char *filename) {
     char line[1024];
     ASMX *asmx = malloc(sizeof(ASMX));
     initAsmx(asmx);
+
     if (fp == NULL) {
         perror("Failed to open file");
         free(asmx);
@@ -36,6 +37,14 @@ ASMX *newAsmx(const char *filename) {
     }
 
     char current_section[100] = {0};
+
+    if (fgets(line, sizeof(line), fp)) {
+        if (strstr(line, "!asmx") == NULL) {
+            fclose(fp);
+            return  NULL;
+        }
+    }
+
     while (fgets(line, sizeof(line), fp)) {
         line[strcspn(line, "\n")] = 0;
 
