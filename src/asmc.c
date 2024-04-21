@@ -15,6 +15,8 @@ static void initASMC(ASMC *asmc) {
     asmc->headerSize = 0;
     asmc->other = NULL;
     asmc->otherSize = 0;
+    asmc->ignore = NULL;
+    asmc->ignoreSize = 0;
 }
 
 bool isIgnored(ASMX *asmx, const char *path) {
@@ -65,6 +67,8 @@ void addFilePath(ASMX *asmx, ASMC *asmc, const char *path) {
         } else {
             addFile(path, &asmc->other, &asmc->otherSize);
         }
+    } else if (isIgnored(asmx, path)) {
+        addFile(path, &asmc->ignore, &asmc->ignoreSize);
     }
 }
 
@@ -85,22 +89,39 @@ ASMC *newAsmc(ASMX *asmx) {
 }
 
 void printAsmc(ASMC *asmc) {
-    puts("Source");
-    for (int i = 0; i < asmc->srcSize; ++i) {
-        printf(" - %s\n", asmc->source[i]);
+    puts("Source :");
+    if (asmc->srcSize != 0) {
+        for (int i = 0; i < asmc->srcSize; ++i) {
+            printf(" - %s\n", asmc->source[i]);
+        }
+    } else {
+        printf(" - None\n");
     }
 
-    puts("Assembly");
-    for (int i = 0; i < asmc->asmSize; ++i) {
-        printf(" - %s\n", asmc->assembly[i]);
+    puts("Assembly :");
+    if (asmc->asmSize  != 0) {
+        for (int i = 0; i < asmc->asmSize; ++i) {
+            printf(" - %s\n", asmc->assembly[i]);
+        }
+    } else {
+        printf(" - None\n");
     }
 
-    puts("Object");
-    for (int i = 0; i < asmc->objSize; ++i) {
-        printf(" - %s\n", asmc->object[i]);
+    puts("Header :");
+    if (asmc->headerSize != 0) {
+        for (int i = 0; i < asmc->headerSize; ++i) {
+            printf(" - %s\n", asmc->header[i]);
+        }
+    } else {
+        printf(" - None\n");
     }
-    puts("Header");
-    for (int i = 0; i < asmc->headerSize; ++i) {
-        printf(" - %s\n", asmc->header[i]);
+
+    puts("Ignore :");
+    if (asmc->ignoreSize != 0) {
+        for (int i = 0; i < asmc->ignoreSize; ++i) {
+            printf(" - %s\n", asmc->ignore[i]);
+        }
+    } else {
+        printf(" - None\n");
     }
 }

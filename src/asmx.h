@@ -18,18 +18,19 @@ typedef struct {
     char **object;
     char **header;
     char **other;
+    char **ignore;
     int srcSize;
     int asmSize;
     int objSize;
     int headerSize;
     int otherSize;
+    int ignoreSize;
 } ASMC;
 
 ASMX *newAsmx(const char *filename);
 ASMC *newAsmc(ASMX *asmx);
 void freeAsmc(ASMC *asmc);
 void freeAsmx(ASMX *asmx);
-void printAsmx(ASMX *asmx);
 void printAsmc(ASMC *asmc);
 int build(ASMC *asmc);
 

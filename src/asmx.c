@@ -113,15 +113,3 @@ ASMX *newAsmx(const char *filename) {
     fclose(fp);
     return asmx;
 }
-
-void printAsmx(ASMX *asmx) {
-    printf("Project: %s\n", asmx->projectName);
-    printf("Sources:\n");
-    for (int i = 0; i < asmx->numSources; i++) {
-        printf("  - %s\n", asmx->sources[i]);
-    }
-    printf("Ignores:\n");
-    for (int i = 0; i < asmx->numIgnores; i++) {
-        printf("  - %s\n", asmx->ignores[i]);
-    }
-}
