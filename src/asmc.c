@@ -20,7 +20,6 @@ static void initASMC(ASMC *asmc) {
 bool isIgnored(ASMX *asmx, const char *path) {
     for (int i = 0; i < asmx->numIgnores; ++i) {
         if (strcmp(asmx->ignores[i], path) == 0) {
-            printf("Ignored: %s\n", path);
             return true;
         }
     }
@@ -69,7 +68,7 @@ void addFilePath(ASMX *asmx, ASMC *asmc, const char *path) {
     }
 }
 
-void addAllASMC(ASMX *asmx, ASMC *asmc, const char **paths, int size) {
+void addAllASMC(ASMX *asmx, ASMC *asmc, char **paths, int size) {
     for (int i = 0; i < size; ++i) {
         addFilePath(asmx, asmc, paths[i]);
     }
@@ -79,7 +78,7 @@ ASMC *newAsmc(ASMX *asmx) {
     ASMC *asmc = malloc(sizeof(ASMC));
     initASMC(asmc);
     asmc->project = asmx->projectName;
-    const char **paths = asmx->sources;
+    char **paths = asmx->sources;
     int size = asmx->numSources;
     addAllASMC(asmx, asmc, paths, size);
     return asmc;

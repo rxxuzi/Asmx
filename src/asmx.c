@@ -30,7 +30,6 @@ void addIgnore(ASMX *asmx, const char *path) {
         asmx->ignores = temp;
         asmx->ignores[asmx->numIgnores] = strdup(path);
         asmx->numIgnores++;
-        printf("Ignore: %s\n", path); // debug
     } else {
         fprintf(stderr, "Error reallocating memory for ignores\n");
     }
