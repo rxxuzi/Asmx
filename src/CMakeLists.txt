@@ -12,8 +12,8 @@ add_executable(asmx
         asmx.h
         asmc.c
         asmb.c
-        util.h
-        util.c)
+        util.c
+        options.c)
 
 set_target_properties(asmx PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/../../"
