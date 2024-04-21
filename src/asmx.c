@@ -9,13 +9,33 @@ void initAsmx(ASMX *asmx) {
     strcpy(asmx->projectName, "");
     asmx->sources = NULL;
     asmx->numSources = 0;
+    asmx->ignores = NULL;
+    asmx->numIgnores = 0;
 }
 
 void addSource(ASMX *asmx, const char *sourcePath) {
-    asmx->sources = realloc(asmx->sources, (asmx->numSources + 1) * sizeof(char *));
-    asmx->sources[asmx->numSources] = strdup(sourcePath);
-    asmx->numSources++;
+    char **temp = realloc(asmx->sources, (asmx->numSources + 1) * sizeof(char *));
+    if (temp != NULL) {
+        asmx->sources = temp;
+        asmx->sources[asmx->numSources] = strdup(sourcePath);
+        asmx->numSources++;
+    } else {
+        fprintf(stderr, "Error reallocating memory for sources\n");
+    }
 }
+
+void addIgnore(ASMX *asmx, const char *path) {
+    char **temp = realloc(asmx->ignores, (asmx->numIgnores + 1) * sizeof(char *));
+    if (temp != NULL) {
+        asmx->ignores = temp;
+        asmx->ignores[asmx->numIgnores] = strdup(path);
+        asmx->numIgnores++;
+        printf("Ignore: %s\n", path); // debug
+    } else {
+        fprintf(stderr, "Error reallocating memory for ignores\n");
+    }
+}
+
 
 void freeAsmx(ASMX *asmx) {
     for (int i = 0; i < asmx->numSources; i++) {
@@ -55,15 +75,15 @@ ASMX *newAsmx(const char *filename) {
 
             if (strcmp(key, "project ") == 0) {
                 strcpy(asmx->projectName, value);
-            } else if (strcmp(key, "sources ") == 0 || strcmp(key, "flags ") == 0) {
+            } else if (strcmp(key, "sources ") == 0 || strcmp(key, "ignore ") == 0) {
                 strcpy(current_section, key);
             }
         } else if (strstr(line, "  - ") && current_section[0] != '\0') {
             char *item = line + 4; // Skip "  - "
             while (*item == ' ') item++;
 
+            struct stat st;
             if (strcmp(current_section, "sources ") == 0) {
-                struct stat st;
                 if (stat(item, &st) == 0 && S_ISDIR(st.st_mode)) {
                     FIS *fs = newFIS(item, false);
                     for (size_t i = 0; i < fs->size; i++) {
@@ -75,10 +95,34 @@ ASMX *newAsmx(const char *filename) {
                         addSource(asmx, item);
                     }
                 }
+            } else if (strcmp(current_section, "ignore ") == 0) {
+                if (stat(item, &st) == 0 && S_ISDIR(st.st_mode)) {
+                    FIS *fs = newFIS(item, false);
+                    for (size_t i = 0; i < fs->size; i++) {
+                        addIgnore(asmx, item);
+                    }
+                    freeFIS(fs);
+                } else {
+                    if (stat(item, &st) == 0) {
+                        addIgnore(asmx, item);
+                    }
+                }
             }
         }
     }
 
     fclose(fp);
     return asmx;
+}
+
+void printAsmx(ASMX *asmx) {
+    printf("Project: %s\n", asmx->projectName);
+    printf("Sources:\n");
+    for (int i = 0; i < asmx->numSources; i++) {
+        printf("  - %s\n", asmx->sources[i]);
+    }
+    printf("Ignores:\n");
+    for (int i = 0; i < asmx->numIgnores; i++) {
+        printf("  - %s\n", asmx->ignores[i]);
+    }
 }

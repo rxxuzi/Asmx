@@ -6,7 +6,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
-void compileAssembly(const char *filepath, const char *target_dir) {
+int compileAssembly(const char *filepath, const char *target_dir) {
     char command[1024];
     char objPath[1024];
     char *fileName;
@@ -33,9 +33,10 @@ void compileAssembly(const char *filepath, const char *target_dir) {
     if (result != 0) {
         fprintf(stderr, "Failed to compile %s\n", filepath);
     }
+    return result;
 }
 
-void compileCLang(const char *filepath, const char *target_dir) {
+int compileCLang(const char *filepath, const char *target_dir) {
     char command[1024];
     char objPath[1024];
     char *fileName;
@@ -63,9 +64,10 @@ void compileCLang(const char *filepath, const char *target_dir) {
     if (result != 0) {
         fprintf(stderr, "Failed to compile %s\n", filepath);
     }
+    return result;
 }
 
-void linker(char **objectPaths, size_t objectSize, char *output) {
+int linker(char **objectPaths, size_t objectSize, char *output) {
     char command[1024] = "gcc";
 
     for (size_t i = 0; i < objectSize; i++) {
@@ -84,9 +86,10 @@ void linker(char **objectPaths, size_t objectSize, char *output) {
     if (result != 0) {
         fprintf(stderr, "Failed to link object files\n");
     }
+    return result;
 }
 
-void build(ASMC *asmc) {
+int build(ASMC *asmc) {
     struct stat st;
     if (stat(BUILD_DIR, &st) == -1) {
         mkdir(BUILD_DIR);
@@ -94,14 +97,22 @@ void build(ASMC *asmc) {
         refresh_dir(BUILD_DIR);
     }
     for (int i = 0; i < asmc->asmSize; ++i) {
-        compileAssembly(asmc->assembly[i], BUILD_DIR);
+        int r = compileAssembly(asmc->assembly[i], BUILD_DIR);
+        if (r != 0) {
+            return r;
+        }
     }
     for (int i = 0; i < asmc->srcSize; ++i) {
-        compileCLang(asmc->source[i], BUILD_DIR);
+        int r = compileCLang(asmc->source[i], BUILD_DIR);
+        if (r != 0) {
+            return r;
+        }
     }
+
     FIS *fis = newFIS(BUILD_DIR, false);
     linker(fis->filepaths, fis->size, asmc->project);
     freeFIS(fis);
+    return 0;
 }
 
 

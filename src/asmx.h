@@ -5,8 +5,10 @@
 
 typedef struct {
     char projectName[100];
-    const char **sources;
+    char **sources;
     int numSources;
+    char **ignores;
+    int numIgnores;
 } ASMX;
 
 typedef struct {
@@ -27,7 +29,8 @@ ASMX *newAsmx(const char *filename);
 ASMC *newAsmc(ASMX *asmx);
 void freeAsmc(ASMC *asmc);
 void freeAsmx(ASMX *asmx);
+void printAsmx(ASMX *asmx);
 void printAsmc(ASMC *asmc);
-void build(ASMC *asmc);
+int build(ASMC *asmc);
 
 #endif //ASMX_H

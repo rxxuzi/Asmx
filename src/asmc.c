@@ -17,13 +17,27 @@ static void initASMC(ASMC *asmc) {
     asmc->otherSize = 0;
 }
 
+bool isIgnored(ASMX *asmx, const char *path) {
+    for (int i = 0; i < asmx->numIgnores; ++i) {
+        if (strcmp(asmx->ignores[i], path) == 0) {
+            printf("Ignored: %s\n", path);
+            return true;
+        }
+    }
+    return false;
+}
+
 static void addFile(const char *path, char ***array, int *size) {
-    *array = realloc(*array, (*size + 1) * sizeof(char *));
-    if (*array != NULL) {
+    char **temp = realloc(*array, (*size + 1) * sizeof(char *));
+    if (temp != NULL) {
+        *array = temp;
         (*array)[*size] = strdup(path);
         (*size)++;
+    } else {
+        fprintf(stderr, "Failed to reallocate memory\n");
     }
 }
+
 
 void freeAsmc(ASMC *asmc) {
     for (int i = 0; i < asmc->srcSize; i++) free(asmc->source[i]);
@@ -38,9 +52,9 @@ void freeAsmc(ASMC *asmc) {
     free(asmc->other);
 }
 
-void addFilePath(ASMC *asmc, const char *path) {
+void addFilePath(ASMX *asmx, ASMC *asmc, const char *path) {
     const char *ext = strrchr(path, '.');
-    if (ext != NULL) {
+    if (ext != NULL && !isIgnored(asmx, path)) {
         if (strcmp(ext, ".c") == 0) {
             addFile(path, &asmc->source, &asmc->srcSize);
         } else if (strcmp(ext, ".asm") == 0) {
@@ -55,9 +69,9 @@ void addFilePath(ASMC *asmc, const char *path) {
     }
 }
 
-void addAllASMC(ASMC *asmc, const char **paths, int size) {
+void addAllASMC(ASMX *asmx, ASMC *asmc, const char **paths, int size) {
     for (int i = 0; i < size; ++i) {
-        addFilePath(asmc, paths[i]);
+        addFilePath(asmx, asmc, paths[i]);
     }
 }
 
@@ -67,7 +81,7 @@ ASMC *newAsmc(ASMX *asmx) {
     asmc->project = asmx->projectName;
     const char **paths = asmx->sources;
     int size = asmx->numSources;
-    addAllASMC(asmc, paths, size);
+    addAllASMC(asmx, asmc, paths, size);
     return asmc;
 }
 
