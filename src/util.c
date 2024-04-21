@@ -4,7 +4,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
-static int remove_directory(const char *path) {
+int remove_directory(const char *path) {
     DIR *d = opendir(path);
     size_t path_len = strlen(path);
     int r = -1;
