@@ -17,6 +17,7 @@ static void initASMC(ASMC *asmc) {
     asmc->otherSize = 0;
     asmc->ignore = NULL;
     asmc->ignoreSize = 0;
+    asmc->asmx = NULL;
 }
 
 bool isIgnored(ASMX *asmx, const char *path) {
@@ -84,11 +85,15 @@ ASMC *newAsmc(ASMX *asmx) {
     asmc->project = asmx->projectName;
     char **paths = asmx->sources;
     int size = asmx->numSources;
+    asmc->asmx = asmx;
     addAllASMC(asmx, asmc, paths, size);
     return asmc;
 }
 
 void printAsmc(ASMC *asmc) {
+    puts("Project :");
+    printf(" - %s\n", asmc->asmx->projectName);
+
     puts("Source :");
     if (asmc->srcSize != 0) {
         for (int i = 0; i < asmc->srcSize; ++i) {
@@ -120,6 +125,15 @@ void printAsmc(ASMC *asmc) {
     if (asmc->ignoreSize != 0) {
         for (int i = 0; i < asmc->ignoreSize; ++i) {
             printf(" - %s\n", asmc->ignore[i]);
+        }
+    } else {
+        printf(" - None\n");
+    }
+
+    puts("Library :");
+    if (asmc->asmx->numLibraries != 0) {
+        for (int i = 0; i < asmc->asmx->numLibraries; ++i) {
+            printf(" - %s\n", asmc->asmx->libraries[i]);
         }
     } else {
         printf(" - None\n");

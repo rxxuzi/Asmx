@@ -68,7 +68,7 @@ int compileCLang(const char *filepath, const char *target_dir) {
     return result;
 }
 
-int linker(char **objectPaths, size_t objectSize, char *output) {
+int linker(ASMC *asmc, char **objectPaths, size_t objectSize) {
     char command[1024] = "gcc";
 
     for (size_t i = 0; i < objectSize; i++) {
@@ -78,11 +78,17 @@ int linker(char **objectPaths, size_t objectSize, char *output) {
         strcat(command, "\"");
     }
 
+    for (size_t i = 0; i < asmc->asmx->numLibraries; i++) {
+        strcat(command, " -l");
+        strcat(command, asmc->asmx->libraries[i]);
+    }
+
     strcat(command, " -o ");
     strcat(command, "\"");
-    strcat(command, output);
+    strcat(command, asmc->project);
     strcat(command, "\"");
 
+    printf("%s\n", command);
     int result = system(command);
     if (result != 0) {
         fprintf(stderr, "Failed to link object files\n");
@@ -114,7 +120,7 @@ int build(ASMC *asmc, int type) {
 
     if (type == TYPE_BUILD) {
         FIS *fis = newFIS(BUILD_DIR, false);
-        linker(fis->filepaths, fis->size, asmc->project);
+        linker(asmc, fis->filepaths, fis->size);
         freeFIS(fis);
     }
 

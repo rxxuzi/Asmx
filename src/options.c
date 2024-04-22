@@ -74,9 +74,11 @@ void gen() {
     fprintf(fp, "  - .\n");
     fprintf(fp, "ignore :\n");
     fprintf(fp, "  -\n");
+    fprintf(fp, "libraries :\n");
+    fprintf(fp, "  -\n");
     fclose(fp);
 
-    printf("asmx-build.yaml generated.\n");
+    printf("build.yaml generated.\n");
 }
 
 void help() {

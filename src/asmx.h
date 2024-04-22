@@ -9,6 +9,8 @@ typedef struct {
     int numSources;
     char **ignores;
     int numIgnores;
+    char **libraries;
+    int numLibraries;
 } ASMX;
 
 typedef struct {
@@ -25,6 +27,7 @@ typedef struct {
     int headerSize;
     int otherSize;
     int ignoreSize;
+    ASMX *asmx;
 } ASMC;
 
 ASMX *newAsmx(const char *filename);

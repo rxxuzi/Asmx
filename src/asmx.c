@@ -11,6 +11,8 @@ void initAsmx(ASMX *asmx) {
     asmx->numSources = 0;
     asmx->ignores = NULL;
     asmx->numIgnores = 0;
+    asmx->libraries = NULL;
+    asmx->numLibraries = 0;
 }
 
 void addSource(ASMX *asmx, const char *sourcePath) {
@@ -35,6 +37,16 @@ void addIgnore(ASMX *asmx, const char *path) {
     }
 }
 
+void addLibrary(ASMX *asmx, const char *libraryPath) {
+    char **temp = realloc(asmx->libraries, (asmx->numLibraries + 1) * sizeof(char *));
+    if (temp != NULL) {
+        asmx->libraries = temp;
+        asmx->libraries[asmx->numLibraries] = strdup(libraryPath);
+        asmx->numLibraries++;
+    } else {
+        fprintf(stderr, "Error reallocating memory for libraries\n");
+    }
+}
 
 void freeAsmx(ASMX *asmx) {
     for (int i = 0; i < asmx->numSources; i++) {
@@ -74,7 +86,7 @@ ASMX *newAsmx(const char *filename) {
 
             if (strcmp(key, "project ") == 0) {
                 strcpy(asmx->projectName, value);
-            } else if (strcmp(key, "sources ") == 0 || strcmp(key, "ignore ") == 0) {
+            } else if (strcmp(key, "sources ") == 0 || strcmp(key, "ignore ") == 0 || strcmp(key, "libraries ") == 0) {
                 strcpy(current_section, key);
             }
         } else if (strstr(line, "  - ") && current_section[0] != '\0') {
@@ -106,6 +118,8 @@ ASMX *newAsmx(const char *filename) {
                         addIgnore(asmx, item);
                     }
                 }
+            } else if (strcmp(current_section, "libraries ") == 0) {
+                addLibrary(asmx, item);
             }
         }
     }
