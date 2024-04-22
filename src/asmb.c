@@ -1,6 +1,7 @@
 #include "asmx.h"
 #include "fis.h"
 #include "util.h"
+#include "options.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -89,13 +90,15 @@ int linker(char **objectPaths, size_t objectSize, char *output) {
     return result;
 }
 
-int build(ASMC *asmc) {
+int build(ASMC *asmc, int type) {
     struct stat st;
     if (stat(BUILD_DIR, &st) == -1) {
         mkdir(BUILD_DIR);
     } else {
         refresh_dir(BUILD_DIR);
     }
+
+
     for (int i = 0; i < asmc->asmSize; ++i) {
         int r = compileAssembly(asmc->assembly[i], BUILD_DIR);
         if (r != 0) {
@@ -109,9 +112,12 @@ int build(ASMC *asmc) {
         }
     }
 
-    FIS *fis = newFIS(BUILD_DIR, false);
-    linker(fis->filepaths, fis->size, asmc->project);
-    freeFIS(fis);
+    if (type == TYPE_BUILD) {
+        FIS *fis = newFIS(BUILD_DIR, false);
+        linker(fis->filepaths, fis->size, asmc->project);
+        freeFIS(fis);
+    }
+
     return 0;
 }
 

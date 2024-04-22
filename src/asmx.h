@@ -32,6 +32,6 @@ ASMC *newAsmc(ASMX *asmx);
 void freeAsmc(ASMC *asmc);
 void freeAsmx(ASMX *asmx);
 void printAsmc(ASMC *asmc);
-int build(ASMC *asmc);
+int build(ASMC *asmc, int type);
 
 #endif //ASMX_H

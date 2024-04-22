@@ -1,14 +1,22 @@
-// version 1.0
+// version 1.2
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "asmx.h"
+#include "options.h"
+#include "util.h"
 
 int main(const int argc, char **argv) {
     if (argc < 2) {
-        fprintf(stderr, "Usage: %s <file>\n", argv[0]);
+        help();
         exit(1);
     }
-    char *file = argv[1];
+
+    immediate_opt(argc, argv);
+    Opt *opt = newOpt();
+    config_opt(argc, argv, opt);
+
+    char *file = opt->input;
 
     ASMX *asmx = newAsmx(file);
     if (asmx == NULL) {
@@ -16,17 +24,33 @@ int main(const int argc, char **argv) {
         exit(1);
     }
 
-    printAsmx(asmx);
-    ASMC *asmc = newAsmc(asmx);
+    if (opt->output != NULL) {
+        strncpy(asmx->projectName, opt->output, sizeof(asmx->projectName) - 1);
+        asmx->projectName[sizeof(asmx->projectName) - 1] = '\0';
+    }
 
-    int r;
-    r = build(asmc);
-    freeAsmx(asmx);
-    freeAsmc(asmc);
+    ASMC *asmc = newAsmc(asmx);
+    if (opt->detail) {
+        printAsmc(asmc);
+    }
+
+    int r = build(asmc, opt->build_type);
+
     if (r != 0) {
         perror("Error: failed to build file");
         exit(1);
     }
-    printf("Done.\n");
+
+    if (opt->run) {
+        system(asmx->projectName);
+    }
+
+    if (opt->clean) {
+        remove_directory(BUILD_DIR);
+    }
+
+    freeOpt(opt);
+    freeAsmx(asmx);
+    freeAsmc(asmc);
     return 0;
 }
