@@ -30,7 +30,7 @@ void immediate_opt(int argc, char *argv[]) {
         } else if (strcmp(argv[i], "--gen") == 0) {
             gen();
             exit(0);
-        } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
+        } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-?") == 0) {
             help();
             exit(0);
         }
@@ -87,7 +87,7 @@ void help() {
     printf("\nOptions:\n");
     printf("  -v, --version       Print the version number and exit.\n");
     printf("  --gen               Generate default asmx-build.yaml and exit.\n");
-    printf("  -h, --help          Print this help message and exit.\n");
+    printf("  -h, -?, --help      Display this help message and exit.\n");
     printf("  -r, --run           Execute the compiled executable after building.\n");
     printf("  -c, --compile       Compile only; do not link.\n");
     printf("  -x,                 Clean the build directory.\n");

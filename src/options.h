@@ -2,7 +2,7 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
-#define VERSION "1.2"
+#define VERSION "1.3"
 #define TYPE_BUILD 0
 #define TYPE_COMPILE_ONLY 1
 
