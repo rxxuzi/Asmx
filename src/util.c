@@ -4,6 +4,16 @@
 #include <dirent.h>
 #include <sys/stat.h>
 
+static struct stat buffer;
+
+int file_exists(const char *path) {
+    return (stat(path, &buffer) == 0);
+}
+
+int dir_exists(const char *path) {
+    return (stat(path, &buffer) == 0 && S_ISDIR(buffer.st_mode));
+}
+
 int remove_directory(const char *path) {
     DIR *d = opendir(path);
     size_t path_len = strlen(path);
