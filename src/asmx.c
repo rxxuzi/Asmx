@@ -4,6 +4,9 @@
 #include <sys/stat.h>
 #include "fis.h"
 #include "asmx.h"
+#include "cson/cson.h"
+#include "cson/csonx.h"
+#include "utils/console.h"
 
 void initAsmx(ASMX *asmx) {
     strcpy(asmx->projectName, "");
@@ -55,75 +58,79 @@ void freeAsmx(ASMX *asmx) {
     free(asmx->sources);
 }
 
-ASMX *newAsmx(const char *filename) {
-    FILE *fp = fopen(filename, "r");
-    char line[1024];
-    ASMX *asmx = malloc(sizeof(ASMX));
-    initAsmx(asmx);
 
-    if (fp == NULL) {
-        perror("Failed to open file");
-        free(asmx);
+ASMX *newAsmx(const char *filename) {
+    JsonValue* json = read_json(filename);
+    if (!json) {
+        fprintf(stderr, "Failed to parse JSON file: %s\n", filename);
         return NULL;
     }
 
-    char current_section[100] = {0};
-
-    if (fgets(line, sizeof(line), fp)) {
-        if (strstr(line, "!asmx") == NULL) {
-            fclose(fp);
-            return  NULL;
-        }
+    JsonObject* root = json_value_as_object(json);
+    if (!root) {
+        fprintf(stderr, "Root of JSON is not an object\n");
+        free_json_value(json);
+        return NULL;
     }
 
-    while (fgets(line, sizeof(line), fp)) {
-        line[strcspn(line, "\n")] = 0;
+    ASMX *asmx = malloc(sizeof(ASMX));
+    initAsmx(asmx);
 
-        if (strchr(line, ':')) {
-            char *key = strtok(line, ":");
-            char *value = strtok(NULL, "\n");
-            while (value && *value == ' ') value++;
+    const char* project_name = json_object_get_string(root, "project", "");
+    strncpy(asmx->projectName, project_name, sizeof(asmx->projectName) - 1);
 
-            if (strcmp(key, "project ") == 0) {
-                strcpy(asmx->projectName, value);
-            } else if (strcmp(key, "sources ") == 0 || strcmp(key, "ignore ") == 0 || strcmp(key, "libraries ") == 0) {
-                strcpy(current_section, key);
-            }
-        } else if (strstr(line, "  - ") && current_section[0] != '\0') {
-            char *item = line + 4; // Skip "  - "
-            while (*item == ' ') item++;
-
-            struct stat st;
-            if (strcmp(current_section, "sources ") == 0) {
-                if (stat(item, &st) == 0 && S_ISDIR(st.st_mode)) {
-                    FIS *fs = newFIS(item, false);
-                    for (size_t i = 0; i < fs->size; i++) {
-                        addSource(asmx, fs->filepaths[i]);
-                    }
-                    freeFIS(fs);
-                } else {
-                    if (stat(item, &st) == 0) {
-                        addSource(asmx, item);
+    JsonArray* sources = json_object_get_array(root, "source");
+    if (sources) {
+        for (int i = 0; i < json_array_size(sources); i++) {
+            JsonValue* source = json_array_get(sources, i);
+            if (source && source->type == JSON_STRING) {
+                struct stat st;
+                if (stat(source->value.string, &st) == 0) {
+                    if (S_ISDIR(st.st_mode)) {
+                        FIS *fs = newFIS(source->value.string, false);
+                        for (size_t j = 0; j < fs->size; j++) {
+                            addSource(asmx, fs->filepaths[j]);
+                        }
+                        freeFIS(fs);
+                    } else {
+                        addSource(asmx, source->value.string);
                     }
                 }
-            } else if (strcmp(current_section, "ignore ") == 0) {
-                if (stat(item, &st) == 0 && S_ISDIR(st.st_mode)) {
-                    FIS *fs = newFIS(item, false);
-                    for (size_t i = 0; i < fs->size; i++) {
-                        addIgnore(asmx, item);
-                    }
-                    freeFIS(fs);
-                } else {
-                    if (stat(item, &st) == 0) {
-                        addIgnore(asmx, item);
-                    }
-                }
-            } else if (strcmp(current_section, "libraries ") == 0) {
-                addLibrary(asmx, item);
             }
         }
     }
 
-    fclose(fp);
+    JsonArray* ignores = json_object_get_array(root, "ignore");
+    if (ignores) {
+        for (int i = 0; i < json_array_size(ignores); i++) {
+            JsonValue* ignore = json_array_get(ignores, i);
+            if (ignore && ignore->type == JSON_STRING) {
+                struct stat st;
+                if (stat(ignore->value.string, &st) == 0) {
+                    if (S_ISDIR(st.st_mode)) {
+                        FIS *fs = newFIS(ignore->value.string, false);
+                        for (size_t j = 0; j < fs->size; j++) {
+                            addIgnore(asmx, fs->filepaths[j]);
+                        }
+                        freeFIS(fs);
+                    } else {
+                        addIgnore(asmx, ignore->value.string);
+                    }
+                }
+            }
+        }
+    }
+
+    JsonArray* libraries = json_object_get_array(root, "libraries");
+    if (libraries) {
+        for (int i = 0; i < json_array_size(libraries); i++) {
+            JsonValue* library = json_array_get(libraries, i);
+            if (library && library->type == JSON_STRING) {
+                addLibrary(asmx, library->value.string);
+            }
+        }
+    }
+
+    free_json_value(json);
     return asmx;
 }

@@ -1,6 +1,7 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include "utils/console.h"
 int file_exists(const char *path);
 int directory_exists(const char *path);
 

@@ -1,98 +1,101 @@
+// options.c
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include "options.h"
-void gen();
+#include "cson/cson.h"
+#include "cson/csonx.h"
+#include "utils/console.h"
 
-Opt *newOpt() {
-    Opt *option = malloc(sizeof(Opt));
-    option->run = false;
-    option->clean = false;
-    option->detail = false;
-    option->output = NULL;
-    option->input = NULL;
-    option->optimization = 0;
-    option->build_type = TYPE_BUILD;
-    return option;
+Options* parse_options(int argc, char **argv) {
+    Options *opt = calloc(1, sizeof(Options));
+    opt->command = CMD_UNKNOWN;
+    opt->input_file = "asmx.json";
+
+    // Check for -h and -v first
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
+            opt->command = CMD_HELP;
+            return opt;
+        } else if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0) {
+            opt->command = CMD_VERSION;
+            return opt;
+        }
+    }
+
+    // Parse command
+    if (strcmp(argv[1], "build") == 0) opt->command = CMD_BUILD;
+    else if (strcmp(argv[1], "compile") == 0) opt->command = CMD_COMPILE;
+    else if (strcmp(argv[1], "run") == 0) opt->command = CMD_RUN;
+    else if (strcmp(argv[1], "clean") == 0) opt->command = CMD_CLEAN;
+    else if (strcmp(argv[1], "help") == 0) opt->command = CMD_HELP;
+    else if (strcmp(argv[1], "version") == 0) opt->command = CMD_VERSION;
+    else if (strcmp(argv[1], "gen") == 0) opt->command = CMD_GEN;
+
+    // Parse options
+    for (int i = 2; i < argc; i++) {
+        if (strcmp(argv[i], "-o") == 0) {
+            if (i + 1 < argc) opt->output_file = argv[++i];
+        } else if (strcmp(argv[i], "-d") == 0) {
+            opt->detail = true;
+        } else if (strcmp(argv[i], "-i") == 0) {
+            if (i + 1 < argc) opt->input_file = argv[++i];
+        }
+    }
+
+    // Set default input file if not provided
+    if (opt->input_file == NULL && (opt->command == CMD_BUILD || opt->command == CMD_COMPILE || opt->command == CMD_RUN)) {
+        opt->input_file = "asmx.json";
+    }
+
+    return opt;
 }
 
-void freeOpt(Opt *opt) {
-    free(opt->input);
-    free(opt->output);
+void free_options(Options *opt) {
     free(opt);
 }
 
-void immediate_opt(int argc, char *argv[]) {
-    for (int i = 1; i < argc; ++i) {
-        if (strcmp(argv[i], "-v") == 0 || strcmp(argv[i],"--version") == 0) {
-            printf("Version %s\n", VERSION);
-            exit(0);
-        } else if (strcmp(argv[i], "--gen") == 0) {
-            gen();
-            exit(0);
-        } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-?") == 0) {
-            help();
-            exit(0);
-        }
-    }
-}
-
-void config_opt(int argc, char *argv[], Opt *o) {
-    for (int i = 1; i < argc; ++i) {
-        if (strcmp(argv[i], "--run") == 0 || strcmp(argv[i], "-r") == 0) {
-            o->run = true;
-        } else if (strcmp(argv[i], "--compile") == 0 || strcmp(argv[i], "-c") == 0) {
-            o->build_type = TYPE_COMPILE_ONLY;
-        } else if (strcmp(argv[i], "--detail") == 0 || strcmp(argv[i], "-d") == 0) {
-            o->detail = true;
-        } else if (strcmp(argv[i], "--output") == 0 || strcmp(argv[i], "-o") == 0) {
-            if (i + 1 < argc) {
-                o->output = argv[i + 1];
-            }
-            ++i;
-        } else if (strcmp(argv[i], "-x") == 0) {
-            o->clean = true;
-        }
-
-        else {
-            if (!o->input) {
-                o->input = argv[i];
-            }
-        }
-    }
-}
-
-void gen() {
-    FILE *fp = fopen("build.yaml", "w");
-    if (fp == NULL) {
-        perror("Error opening file");
-        return;
-    }
-    fprintf(fp, "!asmx\n");
-    fprintf(fp, "project : a\n");
-    fprintf(fp, "sources :\n");
-    fprintf(fp, "  - .\n");
-    fprintf(fp, "ignore :\n");
-    fprintf(fp, "  -\n");
-    fprintf(fp, "libraries :\n");
-    fprintf(fp, "  -\n");
-    fclose(fp);
-
-    printf("build.yaml generated.\n");
-}
-
-void help() {
+void print_help() {
     printf("asmx %s - x64 Windows NASM+C Build Tool\n", VERSION);
-    printf("Usage: asmx [options] [file]\n");
+    printf("\nUsage: \n\n");
+    printf(CYAN("    asmx <command> [options] [file]\n"));
+    printf("\nCommands:\n");
+    printf("  build               Build the project\n");
+    printf("  compile             Compile only; do not link\n");
+    printf("  run                 Build and run the project\n");
+    printf("  clean               Clean the build directory\n");
+    printf("  gen                 Generate default asmx.json\n");
+    printf("  help                Display this help message\n");
+    printf("  version             Display version information\n");
     printf("\nOptions:\n");
-    printf("  -v, --version       Print the version number and exit.\n");
-    printf("  --gen               Generate default asmx-build.yaml and exit.\n");
-    printf("  -h, -?, --help      Display this help message and exit.\n");
-    printf("  -r, --run           Execute the compiled executable after building.\n");
-    printf("  -c, --compile       Compile only; do not link.\n");
-    printf("  -x,                 Clean the build directory.\n");
-    printf("  -d, --detail        Display detailed build information.\n");
-    printf("  -o, --output <file> Specify the output executable name.\n");
-    printf("\nUse 'asmx [options] <build.yaml>' to specify a build configuration file.\n");
-    printf("If no file is specified, 'asmx-build.yaml' is assumed.\n");
+    printf("  -o <file>           Specify the output file name\n");
+    printf("  -d                  Display detailed build information\n");
+    printf("  -i <file>           Specify a custom build configuration file\n");
+}
+
+void print_version() {
+    printf("asmx version %s\n", VERSION);
+}
+
+void generate_default_config() {
+    JsonValue* root = json_create_object();
+
+    JsonValue* project = json_create_string("a");
+    json_object_set(root->value.object, "project", project);
+
+    JsonValue* sources = json_create_array();
+    JsonValue* source = json_create_string(".");
+    json_array_append(sources->value.array, source);
+    json_object_set(root->value.object, "source", sources);
+
+    JsonValue* ignores = json_create_array();
+    json_object_set(root->value.object, "ignore", ignores);
+
+    JsonValue* libraries = json_create_array();
+    json_object_set(root->value.object, "libraries", libraries);
+
+    write_json(root, "asmx.json", 2);  // 2 spaces for indentation
+    free_json_value(root);
+
+    printf("asmx.json generated.\n");
 }

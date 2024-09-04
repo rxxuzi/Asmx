@@ -3,6 +3,9 @@
 
 #define BUILD_DIR "asmx-build/"
 
+#define ASMX_BUILD 0
+#define ASMX_COMPILE 1
+
 typedef struct {
     char projectName[100];
     char **sources;

@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "asmx.h"
+#include "utils/console.h"
+
+#define true 1
+#define false 0
 
 static void initASMC(ASMC *asmc) {
     asmc->project = NULL;
@@ -20,7 +24,7 @@ static void initASMC(ASMC *asmc) {
     asmc->asmx = NULL;
 }
 
-bool isIgnored(ASMX *asmx, const char *path) {
+int isIgnored(ASMX *asmx, const char *path) {
     for (int i = 0; i < asmx->numIgnores; ++i) {
         if (strcmp(asmx->ignores[i], path) == 0) {
             return true;
@@ -83,18 +87,20 @@ ASMC *newAsmc(ASMX *asmx) {
     ASMC *asmc = malloc(sizeof(ASMC));
     initASMC(asmc);
     asmc->project = asmx->projectName;
-    char **paths = asmx->sources;
-    int size = asmx->numSources;
     asmc->asmx = asmx;
-    addAllASMC(asmx, asmc, paths, size);
+
+    for (int i = 0; i < asmx->numSources; i++) {
+        addFilePath(asmx, asmc, asmx->sources[i]);
+    }
+
     return asmc;
 }
 
 void printAsmc(ASMC *asmc) {
-    puts("Project :");
+    puts(CYAN("Project :"));
     printf(" - %s\n", asmc->asmx->projectName);
 
-    puts("Source :");
+    puts(CYAN("Source :"));
     if (asmc->srcSize != 0) {
         for (int i = 0; i < asmc->srcSize; ++i) {
             printf(" - %s\n", asmc->source[i]);
@@ -103,7 +109,7 @@ void printAsmc(ASMC *asmc) {
         printf(" - None\n");
     }
 
-    puts("Assembly :");
+    puts(CYAN("Assembly :"));
     if (asmc->asmSize  != 0) {
         for (int i = 0; i < asmc->asmSize; ++i) {
             printf(" - %s\n", asmc->assembly[i]);
@@ -112,7 +118,7 @@ void printAsmc(ASMC *asmc) {
         printf(" - None\n");
     }
 
-    puts("Header :");
+    puts(CYAN("Header :"));
     if (asmc->headerSize != 0) {
         for (int i = 0; i < asmc->headerSize; ++i) {
             printf(" - %s\n", asmc->header[i]);
@@ -121,7 +127,7 @@ void printAsmc(ASMC *asmc) {
         printf(" - None\n");
     }
 
-    puts("Ignore :");
+    puts(CYAN("Ignore :"));
     if (asmc->ignoreSize != 0) {
         for (int i = 0; i < asmc->ignoreSize; ++i) {
             printf(" - %s\n", asmc->ignore[i]);
@@ -130,7 +136,7 @@ void printAsmc(ASMC *asmc) {
         printf(" - None\n");
     }
 
-    puts("Library :");
+    puts(CYAN("Library :"));
     if (asmc->asmx->numLibraries != 0) {
         for (int i = 0; i < asmc->asmx->numLibraries; ++i) {
             printf(" - %s\n", asmc->asmx->libraries[i]);

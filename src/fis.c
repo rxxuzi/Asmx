@@ -1,10 +1,10 @@
+// fis.c
 #include "fis.h"
 #include <sys/stat.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 
 void freeFIS(FIS *fs) {
     for (size_t i = 0; i < fs->size; ++i) {

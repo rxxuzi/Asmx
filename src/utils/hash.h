@@ -1,4 +1,5 @@
-#ifndef ASMX_HASH_H
-#define ASMX_HASH_H
+// hash.h
+#ifndef HASH_H
+#define HASH_H
 char *file_hash(char *filename);
-#endif //ASMX_HASH_H
+#endif //HASH_H

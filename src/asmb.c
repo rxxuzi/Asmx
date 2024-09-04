@@ -88,7 +88,6 @@ int linker(ASMC *asmc, char **objectPaths, size_t objectSize) {
     strcat(command, asmc->project);
     strcat(command, "\"");
 
-    printf("%s\n", command);
     int result = system(command);
     if (result != 0) {
         fprintf(stderr, "Failed to link object files\n");
@@ -118,7 +117,7 @@ int build(ASMC *asmc, int type) {
         }
     }
 
-    if (type == TYPE_BUILD) {
+    if (type == ASMX_BUILD) {
         FIS *fis = newFIS(BUILD_DIR, false);
         linker(asmc, fis->filepaths, fis->size);
         freeFIS(fis);
